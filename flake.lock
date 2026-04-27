@@ -97,6 +97,22 @@
         "type": "github"
       }
     },
+    "makemeahanzi": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772994740,
+        "narHash": "sha256-0ZNsviBaxDDbyFGOA+DFg4SMfDZJHHreoGSAm/r+FGM=",
+        "owner": "skishore",
+        "repo": "makemeahanzi",
+        "rev": "bddc96d41bef78427ed0e034e9f7e31d71fd1b92",
+        "type": "github"
+      },
+      "original": {
+        "owner": "skishore",
+        "repo": "makemeahanzi",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1776877367,
@@ -179,6 +195,7 @@
         "devshell": "devshell",
         "flake-parts": "flake-parts",
         "git-hooks-nix": "git-hooks-nix",
+        "makemeahanzi": "makemeahanzi",
         "nixpkgs": "nixpkgs",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",

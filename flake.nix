@@ -1,6 +1,4 @@
 {
-  description = "A nix flake template";
-
   inputs = {
     devshell = {
       url = "github:numtide/devshell";
@@ -13,6 +11,11 @@
     };
 
     flake-parts.url = "github:hercules-ci/flake-parts";
+
+    makemeahanzi = {
+      url = "github:skishore/makemeahanzi";
+      flake = false;
+    };
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
