@@ -111,10 +111,17 @@ class HanziNotes:
         self._col = col
         self.notes: list[anki.notes.Note] = []
 
-        # TODO: <<< figure out why notes aren't getting added to this deck. They're landing in the default deck instead >>>
         deck = col.decks.new_deck()
         deck.name = "Homemade Hanzi"
-        col.decks.add_deck(deck)
+        add_op = col.decks.add_deck(deck)
+
+        # Note: unlike other `add_*` operations [0],
+        # `add_deck` doesn't update the deck's id [1].
+        # [0]: https://github.com/ankitects/anki/blob/25.09.2/pylib/anki/collection.py#L534
+        # [1]: https://github.com/ankitects/anki/blob/25.09.2/pylib/anki/decks.py#L170-L171
+        # [2]: https://forums.ankiweb.net/t/anki-decks-deckmanager-add-deck-does-not-update-the-decks-id/69563
+        deck.id = add_op.id
+
         self._deck_id = anki.decks.DeckId(deck.id)
 
         mmahanzi_items = load_mmahanzi_items()
@@ -135,21 +142,17 @@ class HanziNotes:
 
             self.notes.append(anki_hanzi.to_anki_note(self._col))
 
-        # >>> add_notes allows for one time iterables, but it assumes it can iterate over in inpute multiple times: https://github.com/ankitects/anki/blob/25.09.2/pylib/anki/collection.py#L537-L551 <<<
         col.add_notes(
             [anki.collection.AddNoteRequest(note, self._deck_id) for note in self.notes]
         )
 
     def export_anki_package(self, output: Path):
         self._col.export_anki_package(
-            # <<< # this crashes here:
-            # <<< # - https://github.com/ankitects/anki/blob/25.09.2/rslib/src/import_export/package/apkg/export.rs#L64
-            # <<< # - https://github.com/ankitects/anki/blob/25.09.2/rslib/io/src/lib.rs#L266
-            # <<< out_path="yoo.apkg",
+            # Calling `absolute` is a workaround for the fact that Anki crashes if you try to export to a relative path with one component:
+            # <https://forums.ankiweb.net/t/anki-collection-collection-export-anki-package-crashes-if-given-a-relative-path-with-one-component/69562>
             out_path=str(output.absolute()),
             options=anki.collection.ExportAnkiPackageOptions(with_media=True),
-            limit=None,  # <<<
-            # <<< limit=anki.collection.DeckIdLimit(self._deck_id),
+            limit=anki.collection.DeckIdLimit(self._deck_id),
         )
 
 

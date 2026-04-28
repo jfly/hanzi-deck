@@ -1,6 +1,4 @@
 import random
-from pathlib import Path
-from typing import Annotated
 
 import typer
 from flask import Flask

@@ -1,19 +1,16 @@
 # hanzi-deck
 
-Uses data from the [Make Me a Hanzi] project.
+Uses data from the [Make Me a Hanzi] project, and the drawing widget from the [Hanzi Writer] project.
 
 [Make Me a Hanzi]: https://github.com/skishore/makemeahanzi
+[Hanzi Writer]: https://github.com/chanind/hanzi-writer
 
-## Usage
-
-Build deck:
-
-```console
-hanzi-generate
-```
-
-Preview cards:
+## Build deck
 
 ```console
-hanzi-preview
+nix build github:jfly/hanzi-deck
 ```
+
+## Hacking
+
+See [HACKING.md](./HACKING.md).

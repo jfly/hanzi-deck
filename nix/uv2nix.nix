@@ -72,7 +72,6 @@ in
     perSystem =
       {
         config,
-        self',
         pkgs,
         ...
       }:
