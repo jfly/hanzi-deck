@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Generator
 
 import anki.collection
-import anki.decks
 import anki.models
 import anki.notes
 import pydantic
@@ -111,18 +110,9 @@ class HanziNotes:
         self._col = col
         self.notes: list[anki.notes.Note] = []
 
-        deck = col.decks.new_deck()
-        deck.name = "Homemade Hanzi"
-        add_op = col.decks.add_deck(deck)
-
-        # Note: unlike other `add_*` operations [0],
-        # `add_deck` doesn't update the deck's id [1].
-        # [0]: https://github.com/ankitects/anki/blob/25.09.2/pylib/anki/collection.py#L534
-        # [1]: https://github.com/ankitects/anki/blob/25.09.2/pylib/anki/decks.py#L170-L171
-        # [2]: https://forums.ankiweb.net/t/anki-decks-deckmanager-add-deck-does-not-update-the-decks-id/69563
-        deck.id = add_op.id
-
-        self._deck_id = anki.decks.DeckId(deck.id)
+        deck_id = col.decks.id(name="Homemade Hanzi")
+        assert deck_id is not None
+        self._deck_id = deck_id
 
         mmahanzi_items = load_mmahanzi_items()
         for mmahanzi_item in mmahanzi_items:
