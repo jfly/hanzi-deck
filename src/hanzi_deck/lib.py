@@ -1,4 +1,6 @@
 import contextlib
+import html
+import json
 import os
 import tempfile
 from functools import cache
@@ -12,21 +14,37 @@ import anki.notes
 import pydantic
 
 
+class MmaHanziGraphics(pydantic.BaseModel):
+    character: str
+    strokes: list[str]
+    medians: list[list[list[float]]]
+
+
 class MmaHanziItem(pydantic.BaseModel):
     character: str
     definition: str | None = pydantic.Field(default=None)
     pinyin: list[str]
     decomposition: str
     radical: str
+    graphics: MmaHanziGraphics
 
 
 def load_mmahanzi_items() -> list[MmaHanziItem]:
     makemeahanzi = Path(os.environ["MAKEMEAHANZI"])
     dictionary = makemeahanzi / "dictionary.txt"
+    graphics = makemeahanzi / "graphics.txt"
+
+    graphics_by_character: dict[str, MmaHanziGraphics] = {}
+    for line in graphics.read_text().splitlines():
+        mmagraphics = MmaHanziGraphics.model_validate_json(line)
+        graphics_by_character[mmagraphics.character] = mmagraphics
 
     items: list[MmaHanziItem] = []
     for line in dictionary.read_text().splitlines():
-        items.append(MmaHanziItem.model_validate_json(line))
+        raw_item = json.loads(line)
+        character = raw_item["character"]
+        graphics = graphics_by_character[character]
+        items.append(MmaHanziItem.model_validate({**raw_item, "graphics": graphics}))
 
     return items
 
@@ -37,6 +55,7 @@ class AnkiHanzi(pydantic.BaseModel):
     pinyin: str
     decomposition: str
     radical: str
+    graphics_json_escaped_for_html_attribute: str
 
     def to_anki_note(self, col: anki.collection.Collection) -> anki.notes.Note:
         note = col.new_note(self.__class__.to_anki_model(col))
@@ -51,7 +70,16 @@ class AnkiHanzi(pydantic.BaseModel):
         model = col.models.new("Hanzi")
         model["css"] = """
 .card {
-  background-color: red;
+    font-family: arial;
+    font-size: 20px;
+    line-height: 1.5;
+    text-align: center;
+    color: black;
+    background-color: white;
+}
+
+.character {
+    font-size: 80px;
 }
 """
 
@@ -61,17 +89,17 @@ class AnkiHanzi(pydantic.BaseModel):
             col.models.add_field(model, field)
 
         # Add templates.
-        templates_dir = Path("./templates")
+        templates_dir = Path(os.environ["HANZI_DECK_TEMPLATES"])
         for template_dir in templates_dir.iterdir():
-            template_files_by_name = {f.name: f for f in template_dir.iterdir()}
             tmpl = col.models.new_template(template_dir.name)
-            tmpl["qfmt"] = template_files_by_name.pop("question.html").read_text()
-            tmpl["afmt"] = template_files_by_name.pop("answer.html").read_text()
+            tmpl["qfmt"] = (template_dir / "question.html").read_text()
+            tmpl["afmt"] = (template_dir / "answer.html").read_text()
             col.models.add_template(model, tmpl)
 
-            # Treat any remaining files as media.
-            for file in template_files_by_name.values():
-                col.media.add_file(str(file))
+        # Add media.
+        media_dir = Path(os.environ["HANZI_DECK_MEDIA"])
+        for file in media_dir.iterdir():
+            col.media.add_file(str(file))
 
         col.models.add(model)
 
@@ -83,10 +111,11 @@ class HanziNotes:
         self._col = col
         self.notes: list[anki.notes.Note] = []
 
+        # TODO: <<< figure out why notes aren't getting added to this deck. They're landing in the default deck instead >>>
         deck = col.decks.new_deck()
         deck.name = "Homemade Hanzi"
         col.decks.add_deck(deck)
-        deck_id = anki.decks.DeckId(deck.id)
+        self._deck_id = anki.decks.DeckId(deck.id)
 
         mmahanzi_items = load_mmahanzi_items()
         for mmahanzi_item in mmahanzi_items:
@@ -99,13 +128,16 @@ class HanziNotes:
                 pinyin=pinyin,
                 decomposition=mmahanzi_item.decomposition,
                 radical=mmahanzi_item.radical,
+                graphics_json_escaped_for_html_attribute=html.escape(
+                    mmahanzi_item.graphics.model_dump_json()
+                ),
             )
 
             self.notes.append(anki_hanzi.to_anki_note(self._col))
 
         # >>> add_notes allows for one time iterables, but it assumes it can iterate over in inpute multiple times: https://github.com/ankitects/anki/blob/25.09.2/pylib/anki/collection.py#L537-L551 <<<
         col.add_notes(
-            [anki.collection.AddNoteRequest(note, deck_id) for note in self.notes]
+            [anki.collection.AddNoteRequest(note, self._deck_id) for note in self.notes]
         )
 
     def export_anki_package(self, output: Path):
@@ -116,7 +148,8 @@ class HanziNotes:
             # <<< out_path="yoo.apkg",
             out_path=str(output.absolute()),
             options=anki.collection.ExportAnkiPackageOptions(with_media=True),
-            limit=anki.collection.NoteIdsLimit([note.id for note in self.notes]),
+            limit=None,  # <<<
+            # <<< limit=anki.collection.DeckIdLimit(self._deck_id),
         )
 
 

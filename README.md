@@ -9,7 +9,7 @@ Uses data from the [Make Me a Hanzi] project.
 Build deck:
 
 ```console
-hanzi-deck
+hanzi-generate
 ```
 
 Preview cards:

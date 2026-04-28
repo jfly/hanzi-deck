@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "build": "tsdown"
+  },
+  "devDependencies": {
+    "tsdown": ">= 0.21.10",
+    "hanzi-writer": ">= 3.7.3"
+  }
+}

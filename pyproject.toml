@@ -21,8 +21,8 @@ dev = [
 ]
 
 [project.scripts]
-hanzi-deck = "hanzi_deck.cli:app"
-hanzi-preview = "hanzi_deck.preview_app:main"
+hanzi-generate = "hanzi_deck.generate:app"
+hanzi-preview = "hanzi_deck.preview_cli:app"
 
 [tool.ruff.lint]
 extend-select = ["I"]

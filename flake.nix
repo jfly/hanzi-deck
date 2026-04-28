@@ -52,6 +52,7 @@
       imports = [
         ./nix/formatting.nix
         ./nix/uv-workspace.nix
+        ./js/node.nix
       ];
     };
 }

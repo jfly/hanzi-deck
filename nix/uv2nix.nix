@@ -198,7 +198,6 @@ in
             };
         };
 
-        packages.default = self'.packages.${project.pname};
         packages.${project.pname} =
           (mkApplication {
             venv = pythonSet.mkVirtualEnv "application-env" workspace.deps.default;
@@ -212,6 +211,7 @@ in
               ''
               + (lib.concatStringsSep "\n" (
                 map (cmd: ''
+                  echo "Generating shell completions for ${cmd}"
                   installShellCompletion --cmd ${cmd} \
                     --bash <($out/bin/${cmd} --show-completion bash) \
                     --fish <($out/bin/${cmd} --show-completion fish) \
