@@ -1,7 +1,6 @@
 # Nix
 /.direnv
 /result*
-/.uv-links
 
 # Python
 __pycache__/

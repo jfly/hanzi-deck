@@ -1,8 +1,9 @@
 import html
 import json
 import os
-import random
+import textwrap
 from pathlib import Path
+from typing import Generator
 
 import pydantic
 
@@ -42,6 +43,12 @@ def load_mmahanzi_items() -> list[MmaHanziItem]:
     return items
 
 
+class Template(pydantic.BaseModel):
+    name: str
+    question: str
+    answer: str
+
+
 class HanziNote(pydantic.BaseModel):
     character: str
     definition: str
@@ -49,7 +56,39 @@ class HanziNote(pydantic.BaseModel):
     decomposition: str
     radical: str
     graphics_json_escaped_for_html_attribute: str
-    random_number: str  # <<<
+
+    @staticmethod
+    def css() -> str:
+        return textwrap.dedent("""\
+            .card {
+                font-family: arial;
+                font-size: 20px;
+                line-height: 1.5;
+                text-align: center;
+                color: black;
+                background-color: white;
+            }
+
+            .character {
+                font-size: 80px;
+            }
+        """)
+
+    @staticmethod
+    def templates() -> Generator[Template]:
+        templates_dir = Path(os.environ["HANZI_DECK_TEMPLATES"])
+        for template_dir in templates_dir.iterdir():
+            yield Template(
+                name=template_dir.name,
+                question=(template_dir / "question.html").read_text(),
+                answer=(template_dir / "answer.html").read_text(),
+            )
+
+    @staticmethod
+    def media() -> Generator[Path]:
+        media_dir = Path(os.environ["HANZI_DECK_MEDIA"])
+        for file in media_dir.iterdir():
+            yield file
 
 
 def build_hanzi_notes() -> list[HanziNote]:
@@ -70,7 +109,6 @@ def build_hanzi_notes() -> list[HanziNote]:
                 graphics_json_escaped_for_html_attribute=html.escape(
                     mmahanzi_item.graphics.model_dump_json()
                 ),
-                random_number=f"Have a random number: {random.randint(0, 100)}",  # <<<
             )
         )
 

@@ -1,10 +1,11 @@
+import os
+import time
 from pathlib import Path
 from typing import Annotated
 
-import anki.collection
 import typer
 
-from . import anki_collection
+from .genanki_package import generate_package
 
 app = typer.Typer()
 
@@ -13,14 +14,10 @@ app = typer.Typer()
 def main(
     output: Annotated[Path, typer.Argument(dir_okay=False, metavar="[output.apkg]")],
 ):
-    with anki_collection.temp_collection() as col:
-        col.export_anki_package(
-            # Calling `absolute` is a workaround for the fact that Anki crashes if you try to export to a relative path with one component:
-            # <https://forums.ankiweb.net/t/anki-collection-collection-export-anki-package-crashes-if-given-a-relative-path-with-one-component/69562>
-            out_path=str(output.absolute()),
-            options=anki.collection.ExportAnkiPackageOptions(with_media=True),
-            limit=None,
-        )
+    timestamp = int(os.environ.get("SOURCE_DATE_EPOCH", time.time()))
+
+    with generate_package() as package:
+        package.write_to_file(output, timestamp=timestamp)
 
     print(f"Success! Generated {output}")
 
