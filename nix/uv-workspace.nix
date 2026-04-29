@@ -8,6 +8,29 @@
   perSystem =
     { config, pkgs, ... }:
     let
+      python = pkgs.python314;
+      ankiWheels =
+        (
+          (pkgs.anki.override {
+            python3 = python;
+            python3Packages = python.pkgs;
+          }).overrideAttrs
+          (oldAttrs: {
+            outputs = oldAttrs.outputs ++ [ "wheel" ];
+            postInstall = ''
+              mv out/wheels $wheel
+            '';
+            patches = oldAttrs.patches or [ ] ++ [
+              ./anki-allow-setting-ids.patch
+            ];
+          })
+        ).wheel;
+      uv-links = pkgs.symlinkJoin {
+        name = "uv-links";
+        paths = [
+          ankiWheels
+        ];
+      };
       env = {
         MAKEMEAHANZI = "${inputs.makemeahanzi}";
         HANZI_DECK_TEMPLATES = "${../templates}";
@@ -30,6 +53,11 @@
             eval = "$PRJ_ROOT/templates";
           }
         ];
+        # https://pyproject-nix.github.io/uv2nix/patterns/nixpkgs-wheels.html#installing-a-wheel-recommended
+        devshell.startup.uv-links.text = ''
+          ln -sfn ${uv-links} .uv-links
+          export UV_FIND_LINKS=$(realpath .uv-links)
+        '';
       };
 
       packages.default =
@@ -43,13 +71,19 @@
           '';
 
       uv2nix = {
-        python = pkgs.python314;
+        inherit python;
 
         workspaceRoot = ./..;
 
         pyprojectOverrides = final: prev: {
           hanzi-deck = prev.hanzi-deck.overrideAttrs (oldAttrs: {
             inherit env;
+          });
+
+          # https://pyproject-nix.github.io/uv2nix/patterns/nixpkgs-wheels.html#installing-a-wheel-recommended
+          anki = prev.anki.overrideAttrs (old: {
+            # <<< buildInputs = (old.buildInputs or [ ]) ++ python.pkgs.anki.buildInputs;
+            src = ankiWheels;
           });
         };
       };

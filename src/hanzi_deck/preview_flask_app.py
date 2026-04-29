@@ -1,23 +1,21 @@
 import random
 
-import typer
 from flask import Flask
 
-from . import lib
+from . import anki_collection
 from .enter_for_process_lifetime import enter_for_process_lifetime
 
-app = typer.Typer()
+col = enter_for_process_lifetime(anki_collection.temp_collection())
 
-
-hanzi_notes = enter_for_process_lifetime(lib.build_notes())
-
-app = Flask(__name__, static_url_path="", static_folder=hanzi_notes._col.media.dir())
+app = Flask(__name__, static_url_path="", static_folder=col.media.dir())
 
 
 @app.route("/")
 def root():
-    note = random.choice(hanzi_notes.notes)
+    note_id = random.choice(col.find_notes(""))
+    note = col.get_note(note_id)
     card = random.choice(note.cards())
+
     return f"""
         <html>
             <head>
