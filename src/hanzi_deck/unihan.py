@@ -15,8 +15,6 @@ import pydantic
 
 Codepoint = int
 
-UNIHAN_DIR = Path(os.environ["UNIHAN"])
-
 CODEPOINT_RE = re.compile(r"U\+([A-Z0-9]+)")
 
 
@@ -115,7 +113,7 @@ class HanGrapheme(pydantic.BaseModel):
 
 
 class Unihan:
-    def __init__(self, unihan_dir: Path | None = None):
+    def __init__(self):
         unihan_dir = Path(os.environ["UNIHAN"])
 
         self.grapheme_by_codepoint: dict[Codepoint, HanGrapheme] = {}

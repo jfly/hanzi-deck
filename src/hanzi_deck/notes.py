@@ -10,6 +10,66 @@ import pydantic
 from . import hsk, subtlex, unihan
 
 
+def strip_parentheticals(sentence: str) -> str:
+    """
+    Remove parentheticals (and up to 1 surround space) from the given sentence.
+
+    Example:
+
+    >>> strip_parentheticals("(same as 丘) hillock or mound")
+    'hillock or mound'
+
+    >>> strip_parentheticals("I love chocolate (especially dark (please no nuts, though)).")
+    'I love chocolate.'
+
+    >>> strip_parentheticals("Now we're (really)() being weird.")
+    "Now we're being weird."
+
+    >>> strip_parentheticals("I like 2 spaces.  After periods.")
+    'I like 2 spaces.  After periods.'
+
+    >>> strip_parentheticals("()")
+    ''
+    """
+
+    pieces: list[str] = []
+    just_exited_parenthetical = True
+    depth = 0
+    for ch in sentence:
+        if ch == "(":
+            depth += 1
+            continue
+        elif ch == ")":
+            depth -= 1
+            just_exited_parenthetical = True
+            continue
+
+        if depth == 0:
+            if just_exited_parenthetical:
+                pieces.append("")
+                just_exited_parenthetical = False
+            pieces[-1] += ch
+
+    result: list[str] = []
+    last_piece_ended_in_space = False
+    for piece in pieces:
+        if piece.startswith(" "):
+            # Only remove spaces from the start of a piece
+            # if the last piece did not end in a space.
+            if not last_piece_ended_in_space:
+                piece = piece[1:]
+
+        if piece.endswith(" "):
+            last_piece_ended_in_space = True
+            piece = piece[:-1]
+        else:
+            last_piece_ended_in_space = False
+
+        result.append(piece)
+
+    return "".join(result)
+
+
 class MmaHanziGraphics(pydantic.BaseModel):
     character: str
     strokes: list[str]
@@ -55,7 +115,8 @@ class Template(pydantic.BaseModel):
 
 class HanziNote(pydantic.BaseModel):
     character: str
-    definition: str
+    full_definition: str
+    definition_without_parentheticals: str
     pinyin: str
     decomposition: str
     radical: str
@@ -143,7 +204,8 @@ def build_hanzi_notes() -> list[HanziNote]:
         hanzi_notes.append(
             HanziNote(
                 character=character,
-                definition=definition,
+                full_definition=definition,
+                definition_without_parentheticals=strip_parentheticals(definition),
                 pinyin=grapheme.pinyin() or "",
                 decomposition=decomposition,
                 radical=radical,

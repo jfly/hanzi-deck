@@ -46,7 +46,7 @@ in
             };
 
             pyprojectOverrides = lib.mkOption {
-              type = lib.types.raw; # TODO: is there a better type for this?
+              type = lib.types.raw;
               default = _final: _prev: { };
               description = ''
                 Overlays with build fixups.
@@ -60,6 +60,14 @@ in
               default = [ ];
               description = ''
                 Additional packages for running tests.
+              '';
+            };
+
+            checkEnv = lib.mkOption {
+              type = lib.types.attrsOf lib.types.str;
+              default = { };
+              description = ''
+                Additional env vars for running tests.
               '';
             };
           };
@@ -177,6 +185,8 @@ in
               name = "${project.pname}-pytest";
               inherit (editablePythonSet.${project.pname}) src;
               nativeBuildInputs = [ editableVenv ] ++ cfg.nativeCheckInputs;
+
+              env = cfg.checkEnv;
 
               dontConfigure = true;
 

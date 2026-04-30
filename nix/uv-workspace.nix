@@ -15,15 +15,19 @@
         SUBTLEX_CH = "${inputs.subtlex-ch}";
         COMPLETE_HSK_VOCABULARY = "${inputs.complete-hsk-vocabulary}/complete.json";
         HANZI_DECK_TEMPLATES = "${../templates}";
-        HANZI_DECK_MEDIA = pkgs.linkFarm "media" [
-          {
-            # Note the underscore in the filename. That's necessary so anki actually
-            # imports the media
-            # https://docs.ankiweb.net/templates/fields.html#static-soundsimages
-            name = "_hanzi-deck-writer.js";
-            path = "${config.packages.js}/hanzi-deck-writer.js";
-          }
-        ];
+        HANZI_DECK_MEDIA =
+          let
+            mediaFarm = pkgs.linkFarm "media" [
+              {
+                # Note the underscore in the filename. That's necessary so anki actually
+                # imports the media
+                # https://docs.ankiweb.net/templates/fields.html#static-soundsimages
+                name = "_hanzi-deck-writer.js";
+                path = "${config.packages.js}/hanzi-deck-writer.js";
+              }
+            ];
+          in
+          "${mediaFarm}";
       };
     in
     {
@@ -48,14 +52,8 @@
 
       uv2nix = {
         inherit python;
-
+        checkEnv = env;
         workspaceRoot = ./..;
-
-        pyprojectOverrides = final: prev: {
-          hanzi-deck = prev.hanzi-deck.overrideAttrs (oldAttrs: {
-            inherit env;
-          });
-        };
       };
     };
 }
