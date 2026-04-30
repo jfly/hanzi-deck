@@ -35,6 +35,7 @@ addopts = [
     # https://docs.pytest.org/en/stable/explanation/goodpractices.html#which-import-mode
     "--import-mode=importlib",
     "--cov=src",
+    "--doctest-modules",
 ]
 # Treat warnings as errors.
 filterwarnings = [

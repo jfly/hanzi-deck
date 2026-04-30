@@ -7,6 +7,10 @@ from genanki.package import tempfile
 
 from hanzi_deck.notes import HanziNote, build_hanzi_notes
 
+# A little bit of extra data just in case other folks are also
+# using the same mechanism for computing GUIDs.
+GUID_SALT = "jfly/hanzi-deck"
+
 
 def create_model() -> genanki.Model:
     return genanki.Model(
@@ -35,7 +39,7 @@ def create_note(
             getattr(hanzi_note, field_name)
             for field_name in HanziNote.model_fields.keys()
         ],
-        guid=genanki.util.guid_for(hanzi_note.character),
+        guid=genanki.util.guid_for(GUID_SALT, hanzi_note.character),
     )
 
 

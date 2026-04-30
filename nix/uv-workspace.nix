@@ -11,6 +11,9 @@
       python = pkgs.python314;
       env = {
         MAKEMEAHANZI = "${inputs.makemeahanzi}";
+        UNIHAN = "${inputs.unihan}";
+        SUBTLEX_CH = "${inputs.subtlex-ch}";
+        COMPLETE_HSK_VOCABULARY = "${inputs.complete-hsk-vocabulary}/complete.json";
         HANZI_DECK_TEMPLATES = "${../templates}";
         HANZI_DECK_MEDIA = pkgs.linkFarm "media" [
           {

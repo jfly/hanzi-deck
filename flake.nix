@@ -17,6 +17,11 @@
       flake = false;
     };
 
+    complete-hsk-vocabulary = {
+      url = "github:drkameleon/complete-hsk-vocabulary";
+      flake = false;
+    };
+
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     pyproject-build-systems = {
@@ -31,11 +36,22 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    subtlex-ch = {
+      url = "https://doi.org/10.1371/journal.pone.0010729.s002";
+      type = "tarball";
+      flake = false;
+    };
+
     systems.url = "github:nix-systems/default";
 
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    unihan = {
+      url = "https://www.unicode.org/Public/UCD/latest/ucd/Unihan.zip";
+      flake = false;
     };
 
     uv2nix = {
