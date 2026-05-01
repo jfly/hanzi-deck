@@ -59,11 +59,6 @@ class HanGrapheme(pydantic.BaseModel):
     def definition(self) -> str | None:
         return self.properties.get("kDefinition")
 
-    def pinyin(self) -> str | None:
-        # This actually has some structure [0]. TODO: parse it!
-        # [0]: https://www.unicode.org/reports/tr38/#kHanyuPinyin
-        return self.properties.get("kHanyuPinyin")
-
     def compatibility_variant(self) -> Codepoint | None:
         # https://www.unicode.org/reports/tr38/index.html#kCompatibilityVariant
         variant_codepoint_str = self.properties.get("kCompatibilityVariant")

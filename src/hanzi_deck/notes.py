@@ -79,7 +79,6 @@ class MmaHanziGraphics(pydantic.BaseModel):
 class MmaHanziItem(pydantic.BaseModel):
     character: str
     definition: str | None = pydantic.Field(default=None)
-    pinyin: list[str]
     decomposition: str
     radical: str
     graphics: MmaHanziGraphics
@@ -117,7 +116,6 @@ class HanziNote(pydantic.BaseModel):
     character: str
     full_definition: str
     definition_without_parentheticals: str
-    pinyin: str
     decomposition: str
     radical: str
     graphics_json_escaped_for_html_attribute: str
@@ -206,7 +204,6 @@ def build_hanzi_notes() -> list[HanziNote]:
                 character=character,
                 full_definition=definition,
                 definition_without_parentheticals=strip_parentheticals(definition),
-                pinyin=grapheme.pinyin() or "",
                 decomposition=decomposition,
                 radical=radical,
                 graphics_json_escaped_for_html_attribute=graphics_json_escaped_for_html_attribute,
