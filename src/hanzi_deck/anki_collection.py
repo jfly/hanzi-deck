@@ -8,7 +8,7 @@ import anki.models
 import anki.notes
 import genanki.util
 
-from hanzi_deck.notes import HanziNote, build_hanzi_notes
+from .notes import HanziNote, build_hanzi_notes
 
 
 def create_note(

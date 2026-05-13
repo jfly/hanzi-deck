@@ -5,7 +5,7 @@ from typing import Generator
 import genanki
 from genanki.package import tempfile
 
-from hanzi_deck.notes import HanziNote, build_hanzi_notes
+from .notes import HanziNote, build_hanzi_notes
 
 # A little bit of extra data just in case other folks are also
 # using the same mechanism for computing GUIDs.
