@@ -1,6 +1,6 @@
 import HanziWriter from "hanzi-writer";
 import * as cbor2 from "cbor2";
-import "core-js/proposals/array-buffer-base64";
+import "./polyfills";
 
 async function activateHanziWriters() {
   for (let quizEl of document.querySelectorAll<HTMLElement>(".hanzi-quiz")) {
