@@ -3,12 +3,13 @@
 <div class="character">{{character}}</div>
 
 <div
-  class="hanzi-quiz"
+  id="hanzi-quiz"
   data-character="{{character}}"
   data-graphics_cbor_zlib_base64="{{graphics_cbor_zlib_base64}}"
 ></div>
 
 <script type="module">
+  const quizEl = document.getElementById("hanzi-quiz");
   const deckWriter = await import("./_hanzi-deck-writer.js");
-  await deckWriter.activateHanziWriters();
+  await deckWriter.activateHanziWriter(quizEl);
 </script>

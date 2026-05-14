@@ -2,53 +2,50 @@ import HanziWriter from "hanzi-writer";
 import * as cbor2 from "cbor2";
 import "./polyfills";
 
-async function activateHanziWriters() {
-  for (let quizEl of document.querySelectorAll<HTMLElement>(".hanzi-quiz")) {
-    let character = quizEl.dataset.character;
-    if (!character) {
-      console.warn(
-        "No character specified for .hanzi-quiz element, skipping",
-        quizEl,
-      );
-      continue;
-    }
-
-    let graphicsCborZlibBase64 = quizEl.dataset.graphics_cbor_zlib_base64;
-    if (!graphicsCborZlibBase64) {
-      console.warn(
-        "No character data present for .hanzi-quiz element (expected a data-graphics_cbor_zlib_base64 attribute). Skipping",
-        quizEl,
-      );
-      continue;
-    }
-
-    let graphics: any;
-    try {
-      const graphicsCborZlib: Uint8Array<ArrayBuffer> = Uint8Array.fromBase64(
-        graphicsCborZlibBase64,
-      );
-      const graphicsCbor = await decompress(graphicsCborZlib);
-      graphics = cbor2.decode(graphicsCbor);
-    } catch (e) {
-      console.error(e);
-      console.error("Raw graphics_cbor_zlib_base64", graphicsCborZlibBase64);
-      continue;
-    }
-
-    let writer = HanziWriter.create(quizEl, character, {
-      width: 300,
-      height: 300,
-      showCharacter: false,
-      showOutline: true,
-      showHintAfterMisses: 1,
-      highlightOnComplete: false,
-      padding: 5,
-      charDataLoader: function () {
-        return graphics;
-      },
-    });
-    writer.quiz();
+async function activateHanziWriter(quizEl: HTMLElement) {
+  let character = quizEl.dataset.character;
+  if (!character) {
+    console.warn(
+      "No character specified for .hanzi-quiz element, skipping",
+      quizEl,
+    );
+    return;
   }
+
+  let graphicsCborZlibBase64 = quizEl.dataset.graphics_cbor_zlib_base64;
+  if (!graphicsCborZlibBase64) {
+    console.warn(
+      `No character data present for .hanzi-quiz element for character ${character} (expected a data-graphics_cbor_zlib_base64 attribute). Skipping.`,
+    );
+    return;
+  }
+
+  let graphics: any;
+  try {
+    const graphicsCborZlib: Uint8Array<ArrayBuffer> = Uint8Array.fromBase64(
+      graphicsCborZlibBase64,
+    );
+    const graphicsCbor = await decompress(graphicsCborZlib);
+    graphics = cbor2.decode(graphicsCbor);
+  } catch (e) {
+    console.error(e);
+    console.error("Raw graphics_cbor_zlib_base64", graphicsCborZlibBase64);
+    return;
+  }
+
+  let writer = HanziWriter.create(quizEl, character, {
+    width: 300,
+    height: 300,
+    showCharacter: false,
+    showOutline: true,
+    showHintAfterMisses: 1,
+    highlightOnComplete: false,
+    padding: 5,
+    charDataLoader: function () {
+      return graphics;
+    },
+  });
+  writer.quiz();
 }
 
 // Source - https://stackoverflow.com/a/76332760
@@ -82,4 +79,4 @@ async function decompress(
   return mergeUint8Arrays(...decompressedChunks);
 }
 
-export { activateHanziWriters };
+export { activateHanziWriter };
