@@ -5,10 +5,10 @@
 <div
   class="hanzi-quiz"
   data-character="{{character}}"
-  data-graphics_json="{{graphics_json_escaped_for_html_attribute}}"
+  data-graphics_cbor_zlib_base64="{{graphics_cbor_zlib_base64}}"
 ></div>
 
-<script type="module" src="_hanzi-deck-writer.js"></script>
-<script>
-  activateHanziWriters();
+<script type="module">
+  const deckWriter = await import("./_hanzi-deck-writer.js");
+  await deckWriter.activateHanziWriters();
 </script>

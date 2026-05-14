@@ -1,10 +1,14 @@
-import html
+import base64
+import hashlib
 import json
 import os
+import tempfile
 import textwrap
+import zlib
 from pathlib import Path
 from typing import Generator
 
+import cbor2
 import pydantic
 
 from . import hsk, subtlex, unihan
@@ -112,13 +116,46 @@ class Template(pydantic.BaseModel):
     answer: str
 
 
+_CA_MEDIA_TEMPDIR: tempfile.TemporaryDirectory | None = None
+
+
+def get_content_addressed_media_dir() -> Path:
+    """
+    Given `HANZI_DECK_MEDIA`, produce a directory that contains the exact
+    same filenames, but with the filenames uniquely named based on their
+    content. This is a workaround for the fact that Anki won't update media
+    files when re-importing a deck [0].
+
+    [0]: https://forums.ankiweb.net/t/reimport-apkg-and-update-existing-media/69732
+    """
+    global _CA_MEDIA_TEMPDIR
+
+    if _CA_MEDIA_TEMPDIR is not None:
+        return Path(_CA_MEDIA_TEMPDIR.name)
+
+    ca_media_tempdir = tempfile.TemporaryDirectory()
+    ca_media_dir = Path(ca_media_tempdir.name)
+
+    media_dir = Path(os.environ["HANZI_DECK_MEDIA"])
+    for file in media_dir.iterdir():
+        with file.open("rb") as f:
+            digest = hashlib.file_digest(f, "sha256")
+
+        # Use the original filename, but insert the hex digest right before the file extension.
+        ca_file = ca_media_dir / f"{file.stem}-{digest.hexdigest()}{file.suffix}"
+        ca_file.symlink_to(file)
+
+    _CA_MEDIA_TEMPDIR = ca_media_tempdir
+    return ca_media_dir
+
+
 class HanziNote(pydantic.BaseModel):
     character: str
     full_definition: str
     definition_without_parentheticals: str
     decomposition: str
     radical: str
-    graphics_json_escaped_for_html_attribute: str
+    graphics_cbor_zlib_base64: str
     character_count_per_million: str
     simplified_variants: str
     traditional_variants: str
@@ -147,17 +184,37 @@ class HanziNote(pydantic.BaseModel):
 
     @staticmethod
     def templates() -> Generator[Template]:
+        # HACK: Replace all references to media in templates with the content
+        # addressed names instead. This is a workaround for the fact that Anki
+        # won't update media on when reimporting a deck [0].
+        #
+        # [0]: https://forums.ankiweb.net/t/reimport-apkg-and-update-existing-media/69732
+        media_to_ca_media_mappings = {
+            f.readlink().name: f.name
+            for f in get_content_addressed_media_dir().iterdir()
+        }
+
+        def replace_media_with_ca_media(input: str) -> str:
+            for media, ca_media in media_to_ca_media_mappings.items():
+                input = input.replace(media, ca_media)
+
+            return input
+
         templates_dir = Path(os.environ["HANZI_DECK_TEMPLATES"])
         for template_dir in templates_dir.iterdir():
             yield Template(
                 name=template_dir.name,
-                question=(template_dir / "question.html").read_text(),
-                answer=(template_dir / "answer.html").read_text(),
+                question=replace_media_with_ca_media(
+                    (template_dir / "question.html").read_text()
+                ),
+                answer=replace_media_with_ca_media(
+                    (template_dir / "answer.html").read_text()
+                ),
             )
 
     @staticmethod
     def media() -> Generator[Path]:
-        media_dir = Path(os.environ["HANZI_DECK_MEDIA"])
+        media_dir = get_content_addressed_media_dir()
         for file in media_dir.iterdir():
             yield file
 
@@ -186,8 +243,16 @@ def build_hanzi_notes() -> list[HanziNote]:
         mmahanzi_item = mmahanzi_items.get(character)
         decomposition = mmahanzi_item.decomposition if mmahanzi_item is not None else ""
         radical = mmahanzi_item.radical if mmahanzi_item is not None else ""
-        graphics_json_escaped_for_html_attribute = (
-            html.escape(mmahanzi_item.graphics.model_dump_json())
+        graphics_cbor_zlib_base64 = (
+            base64.b64encode(
+                zlib.compress(
+                    cbor2.dumps(mmahanzi_item.graphics.model_dump()),
+                    # Negative values give us "raw" compression, with no header
+                    # or trailing checksum.
+                    # This corresponds to CompressionFormat == "deflate-raw" in a web browser.
+                    wbits=-15,
+                )
+            )
             if mmahanzi_item is not None
             else ""
         )
@@ -206,7 +271,7 @@ def build_hanzi_notes() -> list[HanziNote]:
                 definition_without_parentheticals=strip_parentheticals(definition),
                 decomposition=decomposition,
                 radical=radical,
-                graphics_json_escaped_for_html_attribute=graphics_json_escaped_for_html_attribute,
+                graphics_cbor_zlib_base64=graphics_cbor_zlib_base64,
                 character_count_per_million=(
                     str(frequency_datum.character_count_per_million)
                     if frequency_datum is not None
