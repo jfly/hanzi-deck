@@ -6,8 +6,7 @@ in
   perSystem =
     { pkgs, ... }:
     let
-      inherit (pkgs) importNpmLock buildNpmPackage;
-      nodejs = pkgs.nodejs_25; # Includes `Uint8Array.fromBase64`
+      inherit (pkgs) nodejs importNpmLock buildNpmPackage;
     in
     {
       devShells.js = pkgs.mkShell {
