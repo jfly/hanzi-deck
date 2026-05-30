@@ -252,7 +252,7 @@ def build_hanzi_notes() -> list[HanziNote]:
                     # This corresponds to CompressionFormat == "deflate-raw" in a web browser.
                     wbits=-15,
                 )
-            )
+            ).decode()
             if mmahanzi_item is not None
             else ""
         )
