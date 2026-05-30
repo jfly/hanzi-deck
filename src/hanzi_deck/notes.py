@@ -11,7 +11,7 @@ from typing import Generator
 import cbor2
 import pydantic
 
-from . import hsk, subtlex, unihan
+from . import hsk, npcr, subtlex, unihan
 
 
 def strip_parentheticals(sentence: str) -> str:
@@ -153,6 +153,7 @@ class HanziNote(pydantic.BaseModel):
     character: str
     full_definition: str
     definition_without_parentheticals: str
+    npcr_definition: str
     decomposition: str
     radical: str
     graphics_cbor_zlib_base64: str
@@ -226,6 +227,7 @@ def build_hanzi_notes() -> list[HanziNote]:
     mmahanzi_items = load_mmahanzi_items()
     frequency_data = subtlex.load()
     hsk_data = hsk.load()
+    npcr_data = npcr.load()
     for grapheme in unihan_db.grapheme_by_codepoint.values():
         character = grapheme.character
 
@@ -264,11 +266,14 @@ def build_hanzi_notes() -> list[HanziNote]:
         def join_variants(variants: list[unihan.Codepoint]) -> str:
             return " ".join(map(chr, variants))
 
+        npcr_datum = npcr_data.get(character)
+
         hanzi_notes.append(
             HanziNote(
                 character=character,
                 full_definition=definition,
                 definition_without_parentheticals=strip_parentheticals(definition),
+                npcr_definition=npcr_datum.definition if npcr_datum is not None else "",
                 decomposition=decomposition,
                 radical=radical,
                 graphics_cbor_zlib_base64=graphics_cbor_zlib_base64,

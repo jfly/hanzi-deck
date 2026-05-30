@@ -15,6 +15,7 @@
         SUBTLEX_CH = "${inputs.subtlex-ch}";
         COMPLETE_HSK_VOCABULARY = "${inputs.complete-hsk-vocabulary}/complete.json";
         HANZI_DECK_TEMPLATES = "${../templates}";
+        NPCR_XLS = "${inputs.npcr}";
         HANZI_DECK_MEDIA =
           let
             mediaFarm = pkgs.linkFarm "media" [

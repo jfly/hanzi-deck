@@ -24,3 +24,8 @@ however, it incorporates data from various sources:
   for practicing strokes. [MIT License](https://github.com/chanind/hanzi-writer#license).
 - [Complete HSK Vocabulary](https://github.com/drkameleon/complete-hsk-vocabulary): for mapping
   characters/"words" to HSK level. [MIT License](https://github.com/drkameleon/complete-hsk-vocabulary/blob/main/LICENSE).
+- [HSKFlashCards](https://www.hskflashcards.com/): alternate source of
+  definitions that are more "practical" than those in the Unihan database. [GPL
+  License](https://www.hskflashcards.com/downloads/#licensing-and-permission),
+  but it's unclear how this is compatible with the "All rights reserved" clause
+  at the start of the "New Practical Chinese Reader".

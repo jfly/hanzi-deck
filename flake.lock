@@ -160,6 +160,18 @@
         "type": "github"
       }
     },
+    "npcr": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-HMHrv4X6ByQC20WNKsfs8n46utyH74+dGbbYP2Y0ecs=",
+        "type": "file",
+        "url": "https://www.hskflashcards.com/d/npcr.xls"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://www.hskflashcards.com/d/npcr.xls"
+      }
+    },
     "pyproject-build-systems": {
       "inputs": {
         "nixpkgs": [
@@ -214,6 +226,7 @@
         "git-hooks-nix": "git-hooks-nix",
         "makemeahanzi": "makemeahanzi",
         "nixpkgs": "nixpkgs",
+        "npcr": "npcr",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
         "subtlex-ch": "subtlex-ch",
